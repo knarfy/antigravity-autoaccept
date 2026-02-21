@@ -1,0 +1,74 @@
+{
+    "name": "antigravity-autoaccept",
+    "displayName": "Antigravity AutoAccept",
+    "description": "Auto-acepta pasos del agente Antigravity: ediciones, comandos de terminal y permisos. Sin interrupciones manuales.",
+    "version": "1.0.0",
+    "publisher": "knarf",
+    "engines": {
+        "vscode": "^1.85.0"
+    },
+    "categories": [
+        "Other"
+    ],
+    "keywords": [
+        "antigravity",
+        "autoaccept",
+        "automation",
+        "agent"
+    ],
+    "activationEvents": [
+        "onStartupFinished"
+    ],
+    "main": "./out/extension.js",
+    "contributes": {
+        "commands": [
+            {
+                "command": "autoAccept.toggle",
+                "title": "AntiGravity AutoAccept: Toggle ON/OFF"
+            }
+        ],
+        "configuration": {
+            "title": "Antigravity AutoAccept",
+            "properties": {
+                "autoAccept.pollInterval": {
+                    "type": "number",
+                    "default": 500,
+                    "description": "Intervalo de polling en milisegundos para detectar botones en el panel del agente."
+                },
+                "autoAccept.customButtonTexts": {
+                    "type": "array",
+                    "default": [],
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "Textos adicionales de botones a auto-aceptar (sensible a mayúsculas)."
+                },
+                "autoAccept.enableOnStartup": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Activar AutoAccept automáticamente al iniciar Antigravity."
+                },
+                "autoAccept.cdpPort": {
+                    "type": "number",
+                    "default": 9222,
+                    "description": "Puerto CDP de Chrome DevTools Protocol."
+                }
+            }
+        }
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./"
+    },
+    "devDependencies": {
+        "@types/node": "^18.0.0",
+        "@types/vscode": "^1.85.0",
+        "@types/ws": "^8.5.10",
+        "typescript": "^5.3.3"
+    },
+    "dependencies": {
+        "ws": "^8.16.0"
+    },
+    "license": "MIT"
+}
