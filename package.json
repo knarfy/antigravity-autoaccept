@@ -4,6 +4,10 @@
     "description": "Auto-acepta pasos del agente Antigravity: ediciones, comandos de terminal y permisos. Sin interrupciones manuales.",
     "version": "1.0.0",
     "publisher": "knarf",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/knarfy/antigravity-autoaccept.git"
+    },
     "engines": {
         "vscode": "^1.85.0"
     },
