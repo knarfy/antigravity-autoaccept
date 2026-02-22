@@ -8,6 +8,9 @@ function buildDetectorScript(allButtonTexts: string[]): string {
 (function() {
     var BUTTON_TEXTS = ${textsJson};
 
+    var inMainWindow = !!document.querySelector('.monaco-workbench');
+    if (inMainWindow) { return false; }
+
     var hasAgentPanel = !!(
         document.querySelector('.react-app-container') ||
         document.querySelector('[data-agent-panel]') ||
