@@ -27,7 +27,11 @@ function buildDetectorScript(allButtonTexts: string[]): string {
         var node = walker.currentNode;
         if (!(node instanceof HTMLElement)) { continue; }
         var tag = node.tagName.toLowerCase();
-        if (tag !== 'button' && tag !== 'a' && !node.getAttribute('role')?.includes('button')) {
+        var role = (node.getAttribute('role') || '').toLowerCase();
+        var className = (node.getAttribute('class') || '').toLowerCase();
+        var isButton = tag === 'button' || tag === 'a' || tag === 'vscode-button' || role.includes('button') || className.includes('button') || className.includes('btn');
+
+        if (!isButton) {
             continue;
         }
         var text = (node.textContent || '').trim().toLowerCase();
