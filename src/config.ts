@@ -20,6 +20,23 @@ export const DEFAULT_BUTTON_TEXTS = [
     'ok',
     'confirm',
     'approve',
+    // Spanish translations
+    'aceptar',
+    'permitir siempre',
+    'permitir',
+    'continuar',
+    'proceder',
+    'guardar',
+    'aplicar',
+    'si',
+    'sí',
+    'confirmar',
+    'aprobar',
+    // File modification specific
+    'accept all',
+    'aceptar todo',
+    'revisar cambios',
+    'review changes',
 ];
 
 export const BLOCKED_COMMANDS: string[] = [];
