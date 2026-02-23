@@ -1,68 +1,35 @@
 # Antigravity AutoAccept
 
-Auto-acepta pasos del agente Antigravity: ediciones de archivos, comandos de terminal y permisos. Sin interrupciones.
+A lightweight VS Code extension that automatically accepts Antigravity Agent steps, terminal commands, and file modifications.
 
-## Características
+## Features
 
-- ⚡ **Auto-acepta** botones de confirmación del agente (Run, Accept, Allow, Continue…)
-- 🛡️ **Webview Guard**: sólo actúa en el panel del agente, no interfiere con VS Code
-- 🔧 **Auto-Fix**: parcheador automático del acceso directo `.lnk` en Windows
-- 🎛️ **Toggle** desde la barra de estado o `Ctrl+Shift+P`
-- ⚙️ **Configurable**: intervalo de polling y textos personalizados
+- **Hands-free Automation:** Automatically accepts pending steps from the Antigravity Agent.
+- **Native Integration:** Uses official VS Code commands for maximum stability.
+- **Toggle Control:** Easily enable or disable the auto-acceptance from the status bar.
+- **Zero Side Effects:** No browser tabs opened, no native dialog interference.
 
-## Instalación
+## How to use
 
-### 1. Habilitar modo debug (requerido)
+1. Install the extension from the Marketplace or by downloading the `.vsix`.
+2. Look for the **AutoAccept: ON** indicator in your status bar (bottom right).
+3. Click the status bar item to toggle the automation **ON/OFF**.
 
-La extensión necesita Chrome DevTools Protocol (CDP). La primera vez que se active la extensión sin el flag, te ofrecerá un **Auto-Fix automático**.
+## Auto-accepted actions
 
-**Manual:** añade esto al Target del acceso directo de Antigravity:
-```
---remote-debugging-port=9222
-```
+This extension polls every 500ms to trigger the following Antigravity commands:
+- Agent step approvals
+- Terminal command approvals
+- File modification approvals
+- General agent approvals
 
-### 2. Instalar la extensión
+## Requirements
 
-**Desde VSIX (recomendado):**
-1. `Ctrl+Shift+P` → `Extensions: Install from VSIX`
-2. Selecciona el `.vsix` generado
-3. Recarga la ventana
+- VS Code 1.85.0 or higher.
+- Antigravity extension installed and active.
 
-**Manual:**
-```powershell
-cd K:\ATG_WorkSpaces\PC_APPS\antigravity-autoaccept
-npm install
-npm run compile
-npx vsce package
-```
+## Version 1.0.0
 
-## Uso
-
-| Acción | Descripción |
-|---|---|
-| Clic en `⚡ Auto: ON` | Toggle ON/OFF |
-| `Ctrl+Shift+P` → `AntiGravity AutoAccept: Toggle` | Toggle desde paleta |
-| Panel Output → `Antigravity AutoAccept` | Ver logs |
-
-## Configuración
-
-```json
-{
-    "autoAccept.pollInterval": 500,
-    "autoAccept.customButtonTexts": [],
-    "autoAccept.enableOnStartup": true,
-    "autoAccept.cdpPort": 9222
-}
-```
-
-## Cómo funciona
-
-El panel del agente de Antigravity corre en un proceso Chromium aislado (OOPIF). La API estándar de VS Code no puede ver sus botones React. La extensión usa **CDP (Chrome DevTools Protocol)** en el puerto `9222` para:
-
-1. Listar los targets Chromium activos
-2. Detectar el panel del agente mediante un **Webview Guard** (`.react-app-container`)
-3. Ejecutar un `TreeWalker` JS para encontrar y clicar botones de confirmación
-
-## Licencia
-
-MIT
+- Complete overhaul using native commands.
+- Improved stability and performance.
+- Removed CDP dependency.
