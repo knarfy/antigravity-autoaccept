@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 export interface AutoAcceptConfig {
     pollInterval: number;
     customButtonTexts: string[];
+    excludedButtonTexts: string[];
     enableOnStartup: boolean;
     cdpPort: number;
 }
@@ -34,9 +35,7 @@ export const DEFAULT_BUTTON_TEXTS = [
     'aprobar',
     // File modification specific
     'accept all',
-    'aceptar todo',
-    'revisar cambios',
-    'review changes',
+    'aceptar todo'
 ];
 
 export const BLOCKED_COMMANDS: string[] = [];
@@ -46,6 +45,7 @@ export function getConfig(): AutoAcceptConfig {
     return {
         pollInterval: cfg.get<number>('pollInterval', 500),
         customButtonTexts: cfg.get<string[]>('customButtonTexts', []),
+        excludedButtonTexts: cfg.get<string[]>('excludedButtonTexts', ["confirmar", "confirm", "aprobar", "approve", "proceed", "proceder"]),
         enableOnStartup: cfg.get<boolean>('enableOnStartup', true),
         cdpPort: cfg.get<number>('cdpPort', 9222),
     };

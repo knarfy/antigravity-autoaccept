@@ -15,6 +15,9 @@ export async function activate(context: vscode.ExtensionContext) {
     outputChannel = vscode.window.createOutputChannel('Antigravity AutoAccept');
     outputChannel.appendLine('[AutoAccept] Activando extensión...');
 
+    // Auto-configuración de settings para automatización nativa
+    await configureSettings();
+
     statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
     statusBarItem.command = 'autoAccept.toggle';
     statusBarItem.tooltip = 'Antigravity AutoAccept - Haz clic para toggle ON/OFF';
@@ -43,6 +46,45 @@ export async function activate(context: vscode.ExtensionContext) {
         await startPolling();
     } else {
         updateStatusBar();
+    }
+}
+
+async function configureSettings() {
+    const config = vscode.workspace.getConfiguration();
+    
+    // Configuraciones que SÍ queremos forzar a true (Seguras, rápidas, no UI-blocking)
+    const trueSettings = [
+        'chat.tools.terminal.autoApprove',
+        'antigravity.terminal.autoApprove'
+    ];
+
+    for (const setting of trueSettings) {
+        try {
+            const currentValue = config.inspect(setting)?.globalValue;
+            if (currentValue !== true) {
+                await config.update(setting, true, vscode.ConfigurationTarget.Global);
+                outputChannel.appendLine(`[AutoAccept] Configurado ${setting} = true de forma nativa.`);
+            }
+        } catch (e) {
+            outputChannel.appendLine(`[AutoAccept] Error configurando ${setting}: ${e}`);
+        }
+    }
+
+    // Limpieza activa: Configuraciones que queremos forzar a FALSE para confiar en nuestro CDP
+    const falseSettings = [
+        'chat.tools.global.autoApprove'
+    ];
+
+    for (const setting of falseSettings) {
+        try {
+            const currentValue = config.inspect(setting)?.globalValue;
+            if (currentValue === true) { // Si estaba en true por nuestra culpa anterior, lo apagamos
+                await config.update(setting, false, vscode.ConfigurationTarget.Global);
+                outputChannel.appendLine(`[AutoAccept] Limpiado ${setting} = false para ceder control al CDP.`);
+            }
+        } catch (e) {
+            outputChannel.appendLine(`[AutoAccept] Error limpiando ${setting}: ${e}`);
+        }
     }
 }
 
@@ -82,15 +124,17 @@ async function startPolling() {
 
 async function runDetection() {
     const cfg = getConfig();
-    const script = buildDetectorScriptWithCustomTexts(cfg.customButtonTexts);
+    const script = buildDetectorScriptWithCustomTexts(cfg.customButtonTexts, cfg.excludedButtonTexts);
+
+    // Ejecución CDP Silenciosa (Buscar activamente botones "Run", "Accept", etc)
     try {
         const results = await cdpClient.evaluateOnAgentTargets(script);
-        const clicked = results.some((r) => r === true);
+        const clicked = results.some((r) => !!r);
         if (clicked) {
-            outputChannel.appendLine('[AutoAccept] ✅ Botón auto-aceptado.');
+            outputChannel.appendLine('[AutoAccept] ✅ Botón Auto-Aceptado (vía CDP).');
         }
     } catch (e) {
-        outputChannel.appendLine(`[AutoAccept] Error de polling: ${e}`);
+        // Ignorar errores de red temporales cuando no hay inspector
     }
 }
 

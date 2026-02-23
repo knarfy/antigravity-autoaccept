@@ -1,8 +1,8 @@
 {
     "name": "antigravity-autoaccept",
     "displayName": "Antigravity AutoAccept",
-    "description": "Auto-acepta pasos del agente Antigravity: ediciones, comandos de terminal y permisos. Sin interrupciones manuales.",
-    "version": "1.0.2",
+    "description": "Auto-acepta pasos del agente Antigravity: ediciones, comandos de terminal y confirmaciones manuales.",
+    "version": "1.0.0",
     "publisher": "knarf",
     "repository": {
         "type": "git",
@@ -46,6 +46,21 @@
                         "type": "string"
                     },
                     "description": "Textos adicionales de botones a auto-aceptar (sensible a mayúsculas)."
+                },
+                "autoAccept.excludedButtonTexts": {
+                    "type": "array",
+                    "default": [
+                        "confirmar",
+                        "confirm",
+                        "aprobar",
+                        "approve",
+                        "proceed",
+                        "proceder"
+                    ],
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "Textos de botones que NUNCA deben ser auto-aceptados, incluso si coinciden con los predeterminados u otros añadidos."
                 },
                 "autoAccept.enableOnStartup": {
                     "type": "boolean",

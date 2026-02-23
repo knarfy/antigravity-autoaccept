@@ -2,14 +2,13 @@ import { DEFAULT_BUTTON_TEXTS } from './config';
 
 const WEBVIEW_GUARD_SELECTOR = '.react-app-container, [data-vscode-context]';
 
-function buildDetectorScript(allButtonTexts: string[]): string {
+function buildDetectorScript(allButtonTexts: string[], excludedTexts: string[]): string {
     const textsJson = JSON.stringify(allButtonTexts.map((t) => t.toLowerCase()));
+    const excludedJson = JSON.stringify(excludedTexts.map((t) => t.toLowerCase()));
     return `
 (function() {
     var BUTTON_TEXTS = ${textsJson};
-
-    var inMainWindow = !!document.querySelector('.monaco-workbench');
-    if (inMainWindow) { return false; }
+    var EXCLUDE_TEXTS = ${excludedJson};
 
     var hasAgentPanel = !!(
         document.querySelector('.react-app-container') ||
@@ -40,6 +39,13 @@ function buildDetectorScript(allButtonTexts: string[]): string {
         var text = (node.textContent || '').trim().toLowerCase();
         if (!text) { continue; }
 
+        var isExcluded = EXCLUDE_TEXTS.some(function(et) {
+            return text === et || text.startsWith(et + ' ');
+        });
+        if (isExcluded) {
+            continue;
+        }
+
         var isMatch = BUTTON_TEXTS.some(function(bt) {
             return text.startsWith(bt) || text === bt;
         });
@@ -65,7 +71,7 @@ function buildDetectorScript(allButtonTexts: string[]): string {
 `;
 }
 
-export function buildDetectorScriptWithCustomTexts(customTexts: string[]): string {
+export function buildDetectorScriptWithCustomTexts(customTexts: string[], excludedTexts: string[]): string {
     const allTexts = [...DEFAULT_BUTTON_TEXTS, ...customTexts];
-    return buildDetectorScript(allTexts);
+    return buildDetectorScript(allTexts, excludedTexts);
 }
