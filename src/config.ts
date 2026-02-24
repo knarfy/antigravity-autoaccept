@@ -6,6 +6,7 @@ export interface AutoAcceptConfig {
     excludedButtonTexts: string[];
     enableOnStartup: boolean;
     cdpPort: number;
+    enableAutoScroll: boolean;
 }
 
 export const DEFAULT_BUTTON_TEXTS = [
@@ -48,5 +49,6 @@ export function getConfig(): AutoAcceptConfig {
         excludedButtonTexts: cfg.get<string[]>('excludedButtonTexts', ["confirmar", "confirm", "aprobar", "approve", "proceed", "proceder"]),
         enableOnStartup: cfg.get<boolean>('enableOnStartup', true),
         cdpPort: cfg.get<number>('cdpPort', 9222),
+        enableAutoScroll: cfg.get<boolean>('enableAutoScroll', true),
     };
 }

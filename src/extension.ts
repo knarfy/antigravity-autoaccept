@@ -51,7 +51,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 async function configureSettings() {
     const config = vscode.workspace.getConfiguration();
-    
+
     // Configuraciones que SÍ queremos forzar a true (Seguras, rápidas, no UI-blocking)
     const trueSettings = [
         'chat.tools.terminal.autoApprove',
@@ -124,7 +124,7 @@ async function startPolling() {
 
 async function runDetection() {
     const cfg = getConfig();
-    const script = buildDetectorScriptWithCustomTexts(cfg.customButtonTexts, cfg.excludedButtonTexts);
+    const script = buildDetectorScriptWithCustomTexts(cfg.customButtonTexts, cfg.excludedButtonTexts, cfg.enableAutoScroll);
 
     // Ejecución CDP Silenciosa (Buscar activamente botones "Run", "Accept", etc)
     try {

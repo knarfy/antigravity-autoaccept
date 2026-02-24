@@ -6,6 +6,7 @@ A lightweight VS Code extension that automatically accepts Antigravity Agent ste
 
 - **Hands-free Automation:** Automatically accepts pending steps from the Antigravity Agent.
 - **Native Integration:** Uses official VS Code commands for maximum stability.
+- **AutoScroll Support:** Automatically scrolls the agent chat to find off-screen action buttons.
 - **Toggle Control:** Easily enable or disable the auto-acceptance from the status bar.
 - **Zero Side Effects:** No browser tabs opened, no native dialog interference.
 
@@ -27,6 +28,12 @@ This extension polls every 500ms to trigger the following Antigravity commands:
 
 - VS Code 1.85.0 or higher.
 - Antigravity extension installed and active.
+
+## Version 1.1.0
+
+- Added Smart AutoScroll: Automatically scrolls down the Antigravity chat panel to reveal hidden buttons.
+- Excluded main VS Code text editors from autoscroll to allow normal reading.
+- Configurable via `autoAccept.enableAutoScroll`.
 
 ## Version 1.0.0
 
