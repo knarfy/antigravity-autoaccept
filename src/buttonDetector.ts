@@ -20,23 +20,50 @@ function buildDetectorScript(allButtonTexts: string[], excludedTexts: string[], 
 
     if (${enableAutoScroll}) {
         try {
-            // Only scroll the specific agent containers. Avoid '.monaco-scrollable-element' as it affects all code editors!
-            var scrollables = document.querySelectorAll('.react-app-container, [data-agent-panel], .chat-list-container');
+            // Amplio selector para pillar contenedores principales y bloques internos (logs, terminales, visores markdown)
+            var scrollables = document.querySelectorAll('.react-app-container, [data-agent-panel], .chat-list-container, .monaco-scrollable-element, [class*="content"], [class*="log"], [class*="output"]');
+            
             scrollables.forEach(function(el) {
-                if (el.scrollHeight > el.clientHeight && el.clientHeight > 100) {
-                    el.scrollTo({
-                        top: el.scrollHeight,
-                        behavior: 'smooth'
-                    });
+                // Solo si el elemento es realmente scrollable y tiene cierta altura mínima
+                if (el.scrollHeight > el.clientHeight && el.clientHeight > 40) {
+                    
+                    // Inicializar el listener de scroll para "Sticky Scroll" (si el usuario sube, pausamos autoscroll)
+                    if (!el.dataset.autoScrollListener) {
+                        el.dataset.autoScrollListener = "true";
+                        el.addEventListener('scroll', function() {
+                            // Estamos "abajo" si la distancia al fondo es menor a 25 píxeles
+                            var isAtBottom = (el.scrollHeight - el.scrollTop - el.clientHeight) < 25;
+                            el.dataset.userScrolledUp = isAtBottom ? "false" : "true";
+                        }, { passive: true });
+                    }
+
+                    // Si el usuario no ha subido a mano, forzamos scroll hasta el fondo
+                    if (el.dataset.userScrolledUp !== "true") {
+                        el.scrollTo({
+                            top: el.scrollHeight,
+                            behavior: 'smooth'
+                        });
+                    }
                 }
             });
             
-            // Only scroll the global window if we are NOT in the main VS Code workbench
+            // Lógica similar para el scroll principal de la ventana (solo si no es el VS Code workbench principal)
             if (!document.querySelector('.monaco-workbench')) {
-                window.scrollTo({
-                    top: document.body.scrollHeight,
-                    behavior: 'smooth'
-                });
+                if (!document.documentElement.dataset.autoScrollListener) {
+                    document.documentElement.dataset.autoScrollListener = "true";
+                    window.addEventListener('scroll', function() {
+                        var doc = document.documentElement;
+                        var isAtBottom = (doc.scrollHeight - window.scrollY - window.innerHeight) < 25;
+                        doc.dataset.userScrolledUp = isAtBottom ? "false" : "true";
+                    }, { passive: true });
+                }
+
+                if (document.documentElement.dataset.userScrolledUp !== "true") {
+                    window.scrollTo({
+                        top: document.body.scrollHeight,
+                        behavior: 'smooth'
+                    });
+                }
             }
         } catch(e) {}
     }
