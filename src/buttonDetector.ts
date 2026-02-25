@@ -31,8 +31,8 @@ function buildDetectorScript(allButtonTexts: string[], excludedTexts: string[], 
                     if (!el.dataset.autoScrollListener) {
                         el.dataset.autoScrollListener = "true";
                         el.addEventListener('scroll', function() {
-                            // Estamos "abajo" si la distancia al fondo es menor a 25 píxeles
-                            var isAtBottom = (el.scrollHeight - el.scrollTop - el.clientHeight) < 25;
+                            // Estamos "abajo" si la distancia al fondo es menor a 50 píxeles
+                            var isAtBottom = (el.scrollHeight - el.scrollTop - el.clientHeight) < 50;
                             el.dataset.userScrolledUp = isAtBottom ? "false" : "true";
                         }, { passive: true });
                     }
@@ -41,7 +41,7 @@ function buildDetectorScript(allButtonTexts: string[], excludedTexts: string[], 
                     if (el.dataset.userScrolledUp !== "true") {
                         el.scrollTo({
                             top: el.scrollHeight,
-                            behavior: 'smooth'
+                            behavior: 'auto'
                         });
                     }
                 }
@@ -53,7 +53,8 @@ function buildDetectorScript(allButtonTexts: string[], excludedTexts: string[], 
                     document.documentElement.dataset.autoScrollListener = "true";
                     window.addEventListener('scroll', function() {
                         var doc = document.documentElement;
-                        var isAtBottom = (doc.scrollHeight - window.scrollY - window.innerHeight) < 25;
+                        // Usar 50px de tolerancia
+                        var isAtBottom = (doc.scrollHeight - window.scrollY - window.innerHeight) < 50;
                         doc.dataset.userScrolledUp = isAtBottom ? "false" : "true";
                     }, { passive: true });
                 }
@@ -61,7 +62,7 @@ function buildDetectorScript(allButtonTexts: string[], excludedTexts: string[], 
                 if (document.documentElement.dataset.userScrolledUp !== "true") {
                     window.scrollTo({
                         top: document.body.scrollHeight,
-                        behavior: 'smooth'
+                        behavior: 'auto'
                     });
                 }
             }
