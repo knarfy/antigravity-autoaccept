@@ -29,6 +29,11 @@ This extension polls every 500ms to trigger the following Antigravity commands:
 - VS Code 1.85.0 or higher.
 - Antigravity extension installed and active.
 
+## Version 1.1.2
+
+- Instant AutoScroll: Changed smooth scroll to instant scroll to prevent false scroll-up detections during animation.
+- Increased scroll detection tolerance to handle padding variations in dynamic panels.
+
 ## Version 1.1.1
 
 - Improved AutoScroll with "Sticky Scroll" logic: Internal log panels and terminal view outputs will now correctly auto-scroll. 
