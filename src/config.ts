@@ -6,33 +6,32 @@ export interface AutoAcceptConfig {
     excludedButtonTexts: string[];
     enableOnStartup: boolean;
     cdpPort: number;
-    enableAutoScroll: boolean;
 }
 
 export const DEFAULT_BUTTON_TEXTS = [
     'run',
     'accept',
+    'accept all',
     'always allow',
     'allow',
+    'continue',
+    'proceed',
     'save',
     'apply',
     'yes',
     'ok',
-    'always run',
-    'run command',
     // Spanish translations
+    'ejecutar',
     'aceptar',
+    'aceptar todo',
     'permitir siempre',
     'permitir',
+    'continuar',
+    'proceder',
     'guardar',
     'aplicar',
     'si',
-    'sí',
-    'ejecutar',
-    'siempre ejecutar',
-    'accept all',
-    'aceptar todo',
-    'acept all'
+    'sí'
 ];
 
 export const BLOCKED_COMMANDS: string[] = [];
@@ -42,14 +41,8 @@ export function getConfig(): AutoAcceptConfig {
     return {
         pollInterval: cfg.get<number>('pollInterval', 500),
         customButtonTexts: cfg.get<string[]>('customButtonTexts', []),
-        excludedButtonTexts: Array.from(new Set([
-            ...(cfg.get<string[]>('excludedButtonTexts') || []),
-            "confirmar", "confirm", "aprobar", "approve", "proceed", "proceder",
-            "enviar todo", "enviar",
-            "continue", "continuar", "deshacer", "undo", "revert"
-        ])),
+        excludedButtonTexts: cfg.get<string[]>('excludedButtonTexts', ["confirmar", "confirm", "aprobar", "approve", "proceed", "proceder", "run and debug"]),
         enableOnStartup: cfg.get<boolean>('enableOnStartup', true),
-        cdpPort: cfg.get<number>('cdpPort', 9222),
-        enableAutoScroll: cfg.get<boolean>('enableAutoScroll', true),
+        cdpPort: cfg.get<number>('cdpPort', 9222)
     };
 }

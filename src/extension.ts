@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
 import { CdpClient } from './cdpClient';
 import { buildDetectorScriptWithCustomTexts } from './buttonDetector';
-import { ShortcutPatcher } from './shortcutPatcher';
 import { getConfig } from './config';
 
 let isEnabled = false;
@@ -9,19 +8,19 @@ let pollTimer: ReturnType<typeof setInterval> | undefined;
 let statusBarItem: vscode.StatusBarItem;
 let outputChannel: vscode.OutputChannel;
 let cdpClient: CdpClient;
-let cdpAvailable = false;
+let isBusy = false;
+let lastClickTime = 0;
+const COOLDOWN_MS = 800;
 
 export async function activate(context: vscode.ExtensionContext) {
     outputChannel = vscode.window.createOutputChannel('Antigravity AutoAccept');
-    outputChannel.appendLine('[AutoAccept] Activando extensión...');
-    vscode.window.showInformationMessage('Antigravity AutoAccept V10 Activada 🚀');
+    outputChannel.appendLine('[AutoAccept] Activando extensión v1.1.2-fix16...');
 
-    // Auto-configuración de settings para automatización nativa
-    await configureSettings();
-
+    // Mostrar status bar INMEDIATAMENTE
     statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
     statusBarItem.command = 'autoAccept.toggle';
     statusBarItem.tooltip = 'Antigravity AutoAccept - Haz clic para toggle ON/OFF';
+    statusBarItem.text = '⏳ Auto: INIT';
     statusBarItem.show();
     context.subscriptions.push(statusBarItem);
     context.subscriptions.push(outputChannel);
@@ -33,7 +32,7 @@ export async function activate(context: vscode.ExtensionContext) {
         isEnabled = !isEnabled;
         updateStatusBar();
         if (isEnabled) {
-            await startPolling();
+            startPolling();
         } else {
             stopPolling();
             outputChannel.appendLine('[AutoAccept] Desactivado por el usuario.');
@@ -41,20 +40,29 @@ export async function activate(context: vscode.ExtensionContext) {
     });
     context.subscriptions.push(toggleCmd);
 
-    if (cfg.enableOnStartup) {
-        isEnabled = true;
-        updateStatusBar();
-        await startPolling();
-    } else {
-        updateStatusBar();
-    }
+    // Configurar settings y arrancar en background
+    setImmediate(async () => {
+        try {
+            await configureSettings();
+        } catch (e) {
+            outputChannel.appendLine(`[AutoAccept] Error en configureSettings: ${e}`);
+        }
+
+        if (cfg.enableOnStartup) {
+            isEnabled = true;
+            updateStatusBar();
+            startPolling();
+        } else {
+            updateStatusBar();
+        }
+    });
 }
 
 async function configureSettings() {
     const config = vscode.workspace.getConfiguration();
 
-    // Configuraciones que SÍ queremos forzar a true (Seguras, rápidas, no UI-blocking)
     const trueSettings = [
+        'chat.tools.global.autoApprove',
         'chat.tools.terminal.autoApprove',
         'antigravity.terminal.autoApprove'
     ];
@@ -64,85 +72,49 @@ async function configureSettings() {
             const currentValue = config.inspect(setting)?.globalValue;
             if (currentValue !== true) {
                 await config.update(setting, true, vscode.ConfigurationTarget.Global);
-                outputChannel.appendLine(`[AutoAccept] Configurado ${setting} = true de forma nativa.`);
+                outputChannel.appendLine(`[AutoAccept] Configurado ${setting} = true.`);
             }
         } catch (e) {
             outputChannel.appendLine(`[AutoAccept] Error configurando ${setting}: ${e}`);
         }
     }
-
-    // Limpieza activa: Configuraciones que queremos forzar a FALSE para confiar en nuestro CDP
-    const falseSettings = [
-        'chat.tools.global.autoApprove'
-    ];
-
-    for (const setting of falseSettings) {
-        try {
-            const currentValue = config.inspect(setting)?.globalValue;
-            if (currentValue === true) { // Si estaba en true por nuestra culpa anterior, lo apagamos
-                await config.update(setting, false, vscode.ConfigurationTarget.Global);
-                outputChannel.appendLine(`[AutoAccept] Limpiado ${setting} = false para ceder control al CDP.`);
-            }
-        } catch (e) {
-            outputChannel.appendLine(`[AutoAccept] Error limpiando ${setting}: ${e}`);
-        }
-    }
 }
 
-async function startPolling() {
+function startPolling() {
+    if (pollTimer) { return; } // Ya está corriendo, no duplicar
+
     const cfg = getConfig();
-    outputChannel.appendLine(`[AutoAccept] Verificando CDP en puerto ${cfg.cdpPort}...`);
-    cdpAvailable = await cdpClient.isPortOpen();
-
-    if (!cdpAvailable) {
-        outputChannel.appendLine('[AutoAccept] Puerto CDP no disponible. Mostrando aviso.');
-        const patcher = new ShortcutPatcher(cfg.cdpPort, (msg) => outputChannel.appendLine(msg));
-        await patcher.checkAndPrompt();
-
-        cdpAvailable = await cdpClient.isPortOpen();
-        if (!cdpAvailable) {
-            outputChannel.appendLine('[AutoAccept] CDP sigue sin estar disponible. Polling desactivado.');
-            isEnabled = false;
-            updateStatusBar();
-            return;
-        }
-    }
-
-    outputChannel.appendLine(`[AutoAccept] CDP listo. Polling cada ${cfg.pollInterval}ms.`);
-
-    if (pollTimer) {
-        clearInterval(pollTimer);
-    }
+    outputChannel.appendLine(`[AutoAccept] CDP polling cada ${cfg.pollInterval}ms.`);
 
     pollTimer = setInterval(async () => {
-        if (!isEnabled) {
-            stopPolling();
-            return;
+        if (!isEnabled || isBusy) { return; }
+
+        // Cooldown: si hicimos clic hace menos de COOLDOWN_MS, saltar
+        if (Date.now() - lastClickTime < COOLDOWN_MS) { return; }
+
+        isBusy = true;
+        try {
+            await runDetection();
+        } catch (e) {
+            // Ignorar errores temporales
+        } finally {
+            isBusy = false;
         }
-        await runDetection();
     }, cfg.pollInterval);
 }
 
 async function runDetection() {
     const cfg = getConfig();
-    const script = buildDetectorScriptWithCustomTexts(cfg.customButtonTexts, cfg.excludedButtonTexts, cfg.enableAutoScroll);
+    const script = buildDetectorScriptWithCustomTexts(cfg.customButtonTexts, cfg.excludedButtonTexts);
 
-    // Ejecución CDP Diagnóstica Agresiva
-    try {
-        const results = await cdpClient.evaluateOnAgentTargets(script);
-        if (results.length === 0) {
-            // outputChannel.appendLine('[AutoAccept] [DEBUG] No se han encontrado targets webview para escanear.');
+    const results = await cdpClient.evaluateOnAgentTargets(script);
+
+    for (const res of results) {
+        const r = res as any;
+        if (r && r.clicked) {
+            outputChannel.appendLine(`[AutoAccept] ✅ Botón Auto-Aceptado: "${r.text}" (vía CDP).`);
+            lastClickTime = Date.now();
         }
-        for (const res of results) {
-            if (res && res.clicked) {
-                outputChannel.appendLine(`[AutoAccept] ✅ ¡ÉXITO! Botón Auto-Aceptado: "${res.text}"`);
-                outputChannel.appendLine(`[AutoAccept] Target: ${res.title} (${res.url})`);
-            } else if (res && res.scannned) {
-                outputChannel.appendLine(`[AutoAccept] [DEBUG] Escaneado Target: "${res.title}" | URL: ${res.url}`);
-            }
-        }
-    } catch (e) {
-        outputChannel.appendLine(`[AutoAccept] ❌ Error CRÍTICO en ciclo de detección: ${e}`);
     }
 }
 

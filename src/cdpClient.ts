@@ -62,22 +62,45 @@ export class CdpClient {
     async evaluateOnAgentTargets(script: string): Promise<any[]> {
         const targets = await this.getTargets();
         const results: any[] = [];
-        this.outputLog(`[CDP] Escaneando cada uno de los ${targets.length} targets encontrados...`);
 
         for (const target of targets) {
-            if (!target.webSocketDebuggerUrl) continue;
+            if (!target.webSocketDebuggerUrl) {
+                continue;
+            }
             try {
-                const res = await this.evaluateOnTarget(target.webSocketDebuggerUrl, script);
-                if (res) {
-                    res.title = target.title;
-                    res.url = target.url;
-                    results.push(res);
+                const result = await this.evaluateOnTarget(target.webSocketDebuggerUrl, script);
+                // Si el script encontró un botón con coordenadas, hacer clic físico via CDP
+                if (result && result.clicked && typeof result.x === 'number' && result.x > 0) {
+                    await this.sendPhysicalClick(target.webSocketDebuggerUrl, result.x, result.y);
                 }
+                results.push(result);
             } catch (e) {
-                // Ignore target errors
+                this.outputLog(`[CDP] Error en target ${target.id}: ${e}`);
             }
         }
         return results;
+    }
+
+    private sendPhysicalClick(wsUrl: string, x: number, y: number): Promise<void> {
+        return new Promise((resolve) => {
+            const ws = new WebSocket(wsUrl);
+            let step = 0;
+            const sendNext = () => {
+                step++;
+                if (step === 1) {
+                    ws.send(JSON.stringify({ id: 10, method: 'Input.dispatchMouseEvent', params: { type: 'mousePressed', x, y, button: 'left', clickCount: 1 } }));
+                } else if (step === 2) {
+                    ws.send(JSON.stringify({ id: 11, method: 'Input.dispatchMouseEvent', params: { type: 'mouseReleased', x, y, button: 'left', clickCount: 1 } }));
+                } else {
+                    try { ws.close(); } catch { }
+                    resolve();
+                }
+            };
+            ws.on('open', () => sendNext());
+            ws.on('message', () => sendNext());
+            ws.on('error', () => { try { ws.close(); } catch { } resolve(); });
+            setTimeout(() => { try { ws.close(); } catch { } resolve(); }, 2000);
+        });
     }
 
     private evaluateOnTarget(wsUrl: string, script: string): Promise<any> {
@@ -92,7 +115,7 @@ export class CdpClient {
                 }
             };
 
-            const timeout = setTimeout(() => done(false), 3000);
+            const timeout = setTimeout(() => done(null), 3000);
 
             ws.on('open', () => {
                 ws.send(JSON.stringify({
@@ -111,17 +134,17 @@ export class CdpClient {
                 try {
                     const msg = JSON.parse(data.toString());
                     if (msg.id === 1) {
-                        const val = msg.result?.result?.value;
-                        done(val);
+                        // Devolver el valor real, no convertir a boolean
+                        done(msg.result?.result?.value ?? null);
                     }
                 } catch {
-                    done(false);
+                    done(null);
                 }
             });
 
             ws.on('error', () => {
                 clearTimeout(timeout);
-                done(false);
+                done(null);
             });
         });
     }
