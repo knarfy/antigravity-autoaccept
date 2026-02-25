@@ -90,3 +90,8 @@ LÃ­nea 110.
 
 ---
 Fin del documento.
+
+
+## Sección 6: Log Inyectado
+
+[INICIO DE INYECCIÓN DE TEXTO MODO TEST]
