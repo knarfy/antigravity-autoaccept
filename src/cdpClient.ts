@@ -62,16 +62,19 @@ export class CdpClient {
     async evaluateOnAgentTargets(script: string): Promise<any[]> {
         const targets = await this.getTargets();
         const results: any[] = [];
+        this.outputLog(`[CDP] Escaneando cada uno de los ${targets.length} targets encontrados...`);
 
         for (const target of targets) {
-            if (!target.webSocketDebuggerUrl) {
-                continue;
-            }
+            if (!target.webSocketDebuggerUrl) continue;
             try {
-                const result = await this.evaluateOnTarget(target.webSocketDebuggerUrl, script);
-                results.push(result);
+                const res = await this.evaluateOnTarget(target.webSocketDebuggerUrl, script);
+                if (res) {
+                    res.title = target.title;
+                    res.url = target.url;
+                    results.push(res);
+                }
             } catch (e) {
-                this.outputLog(`[CDP] Error en target ${target.id}: ${e}`);
+                // Ignore target errors
             }
         }
         return results;

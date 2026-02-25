@@ -31,7 +31,8 @@ export const DEFAULT_BUTTON_TEXTS = [
     'ejecutar',
     'siempre ejecutar',
     'accept all',
-    'aceptar todo'
+    'aceptar todo',
+    'acept all'
 ];
 
 export const BLOCKED_COMMANDS: string[] = [];
@@ -44,7 +45,7 @@ export function getConfig(): AutoAcceptConfig {
         excludedButtonTexts: Array.from(new Set([
             ...(cfg.get<string[]>('excludedButtonTexts') || []),
             "confirmar", "confirm", "aprobar", "approve", "proceed", "proceder",
-            "send all", "send", "enviar todo", "enviar",
+            "enviar todo", "enviar",
             "continue", "continuar", "deshacer", "undo", "revert"
         ])),
         enableOnStartup: cfg.get<boolean>('enableOnStartup', true),

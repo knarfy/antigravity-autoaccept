@@ -14,6 +14,7 @@ let cdpAvailable = false;
 export async function activate(context: vscode.ExtensionContext) {
     outputChannel = vscode.window.createOutputChannel('Antigravity AutoAccept');
     outputChannel.appendLine('[AutoAccept] Activando extensión...');
+    vscode.window.showInformationMessage('Antigravity AutoAccept V10 Activada 🚀');
 
     // Auto-configuración de settings para automatización nativa
     await configureSettings();
@@ -126,16 +127,22 @@ async function runDetection() {
     const cfg = getConfig();
     const script = buildDetectorScriptWithCustomTexts(cfg.customButtonTexts, cfg.excludedButtonTexts, cfg.enableAutoScroll);
 
-    // Ejecución CDP Silenciosa (Buscar activamente botones "Run", "Accept", etc)
+    // Ejecución CDP Diagnóstica Agresiva
     try {
         const results = await cdpClient.evaluateOnAgentTargets(script);
+        if (results.length === 0) {
+            // outputChannel.appendLine('[AutoAccept] [DEBUG] No se han encontrado targets webview para escanear.');
+        }
         for (const res of results) {
             if (res && res.clicked) {
-                outputChannel.appendLine(`[AutoAccept] ✅ Botón Auto-Aceptado: "${res.text}" (vía CDP).`);
+                outputChannel.appendLine(`[AutoAccept] ✅ ¡ÉXITO! Botón Auto-Aceptado: "${res.text}"`);
+                outputChannel.appendLine(`[AutoAccept] Target: ${res.title} (${res.url})`);
+            } else if (res && res.scannned) {
+                outputChannel.appendLine(`[AutoAccept] [DEBUG] Escaneado Target: "${res.title}" | URL: ${res.url}`);
             }
         }
     } catch (e) {
-        // Ignorar errores de red temporales cuando no hay inspector
+        outputChannel.appendLine(`[AutoAccept] ❌ Error CRÍTICO en ciclo de detección: ${e}`);
     }
 }
 

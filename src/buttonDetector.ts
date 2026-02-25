@@ -32,62 +32,80 @@ function buildDetectorScript(allButtonTexts: string[], excludedTexts: string[], 
         } catch(e) {}
     }
 
-    // Detección V6: Recursión en Shadow DOM
-    function findAndClick(root: Node | ShadowRoot): any {
-        var children = root instanceof HTMLElement || root instanceof ShadowRoot ? root.children : [];
-        for (var i = 0; i < children.length; i++) {
-            var node = children[i] as HTMLElement;
+    // Detección V10: Super-Lax + Iframes + Shadow + Diagnosis
+    function scan(root: Node | ShadowRoot | Document, depth: number): any {
+        if (depth > 15) return null;
+        var nodes = [];
+        if (root instanceof Document) {
+            nodes = (root.body || root.documentElement).querySelectorAll('*');
+        } else {
+            nodes = (root as HTMLElement).querySelectorAll('*');
+        }
+
+        for (var i = 0; i < nodes.length; i++) {
+            var node = nodes[i] as HTMLElement;
             
-            // 1. Explorar Shadow DOM si existe
+            // 1. Shadow DOM recursivo
             if (node.shadowRoot) {
-                var res = findAndClick(node.shadowRoot);
+                var res = scan(node.shadowRoot, depth + 1);
                 if (res) return res;
             }
 
-            // 2. Comprobar si es un elemento interactivo
-            var style = window.getComputedStyle(node);
-            var tag = node.tagName.toLowerCase();
-            var role = (node.getAttribute('role') || '').toLowerCase();
-            var className = (node.getAttribute('class') || '').toLowerCase();
-            
-            var isClickable = tag === 'button' || tag === 'a' || tag === 'vscode-button' || 
-                             role.includes('button') || className.includes('button') || 
-                             className.includes('btn') || style.cursor === 'pointer';
+            // 2. Iframe recursivo
+            if (node.tagName && (node.tagName.toLowerCase() === 'iframe' || node.tagName.toLowerCase() === 'frame')) {
+                try {
+                    var doc = (node as HTMLIFrameElement).contentDocument || (node as HTMLIFrameElement).contentWindow?.document;
+                    if (doc) {
+                        var res = scan(doc, depth + 1);
+                        if (res) return res;
+                    }
+                } catch(e) {}
+            }
 
-            if (isClickable) {
+            // 3. Evaluar Botón
+            var tag = node.tagName ? node.tagName.toLowerCase() : '';
+            var style = window.getComputedStyle(node);
+            var isBtn = tag === 'button' || tag === 'vscode-button' || tag === 'a' || 
+                       (node.getAttribute('role') || '').toLowerCase().includes('button') || 
+                       style.cursor === 'pointer';
+
+            if (isBtn) {
                 var text = (node.textContent || '').trim().toLowerCase();
-                if (text) {
-                    var isExcluded = EXCLUDE_TEXTS.some(function(et) { return text.includes(et); });
-                    if (!isExcluded) {
-                        // Limpieza V5 mejorada: detectamos palabras completas
-                        var cleanText = text.replace(/[^a-z0-9]/g, ' ');
-                        var words = cleanText.split(/\s+/);
-                        
-                        var isMatch = BUTTON_TEXTS.some(function(bt) {
-                            if (bt.indexOf(' ') !== -1) return cleanText.indexOf(bt) !== -1;
-                            return words.indexOf(bt) !== -1;
+                var label = (node.getAttribute('aria-label') || '').toLowerCase();
+                var title = (node.getAttribute('title') || '').toLowerCase();
+                var combined = text + ' ' + label + ' ' + title;
+
+                if (combined.trim()) {
+                    var isMatch = BUTTON_TEXTS.some(function(bt) {
+                        return combined.indexOf(bt) !== -1;
+                    });
+
+                    if (isMatch) {
+                        var isExcluded = EXCLUDE_TEXTS.some(function(et) {
+                            return combined.indexOf(et) !== -1;
                         });
 
-                        if (isMatch) {
-                            var isVisible = !!(node.offsetWidth || node.offsetHeight || node.getClientRects().length);
-                            if (isVisible && style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0') {
-                                node.click();
-                                return { clicked: true, text: text };
-                            }
+                        if (isExcluded) {
+                            // console.log("Botón detectado pero EXCLUIDO por seguridad: " + combined);
+                            continue;
+                        }
+
+                        var visible = !!(node.offsetWidth || node.offsetHeight || node.getClientRects().length);
+                        if (visible && style.display !== 'none' && style.visibility !== 'hidden') {
+                            node.click();
+                            node.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+                            node.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+                            return { clicked: true, text: combined };
                         }
                     }
                 }
             }
-
-            // 3. Recursión normal
-            var deepRes = findAndClick(node);
-            if (deepRes) return deepRes;
         }
         return null;
     }
 
-    var result = findAndClick(document.body);
-    return result || { clicked: false };
+    var result = scan(document, 0);
+    return result || { clicked: false, scanned: true };
 })();
 `;
 }
