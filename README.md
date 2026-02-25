@@ -1,52 +1,52 @@
 # Antigravity AutoAccept
 
-A lightweight VS Code extension that automatically accepts Antigravity Agent steps, terminal commands, and file modifications.
+A lightweight VS Code extension that automatically accepts Antigravity Agent steps, terminal commands, and file modifications using CDP physical clicks for maximum reliability.
 
 ## Features
 
 - **Hands-free Automation:** Automatically accepts pending steps from the Antigravity Agent.
-- **Native Integration:** Uses official VS Code commands for maximum stability.
-- **AutoScroll Support:** Automatically scrolls the agent chat to find off-screen action buttons.
-- **Toggle Control:** Easily enable or disable the auto-acceptance from the status bar.
-- **Zero Side Effects:** No browser tabs opened, no native dialog interference.
+- **CDP Physical Clicks:** Uses Chrome DevTools Protocol to simulate real user clicks, bypassing Electron context isolation issues.
+- **Smart Scroll-on-Found:** Automatically scrolls to action buttons only when detected, ensuring they are clickable without constant UI flickering.
+- **Span & Button Support:** Detects both native buttons and styled spans (like "Accept All") with `cursor-pointer` classes.
+- **Safety Exclusions:** Built-in safeguards to prevent auto-accepting critical actions like "Confirm", "Approve", or loop-prone dropdowns like "Always Run".
+- **Toggle Control:** Quickly enable/disable the automation from the status bar.
 
 ## How to use
 
-1. Install the extension from the Marketplace or by downloading the `.vsix`.
-2. Look for the **AutoAccept: ON** indicator in your status bar (bottom right).
-3. Click the status bar item to toggle the automation **ON/OFF**.
+1. Install the extension from the Marketplace or via `.vsix`.
+2. Ensure Antigravity is running with CDP enabled (default port 9222).
+3. Look for the **Auto: ON** indicator in your status bar.
+4. Click it to toggle the automation **ON/OFF**.
 
 ## Auto-accepted actions
 
-This extension polls every 500ms to trigger the following Antigravity commands:
-- Agent step approvals
-- Terminal command approvals
-- File modification approvals
-- General agent approvals
+Polls every 500ms (configurable) to trigger:
+- Terminal command "Run" prompts.
+- File modification "Accept All" or "Accept" banners.
+- General agent approvals.
 
 ## Requirements
 
 - VS Code 1.85.0 or higher.
 - Antigravity extension installed and active.
+- Access to the CDP port (default 9222).
 
-## Version 1.1.2
+## Changelog
 
-- Instant AutoScroll: Changed smooth scroll to instant scroll to prevent false scroll-up detections during animation.
-- Increased scroll detection tolerance to handle padding variations in dynamic panels.
+### 1.1.5 - Stable Release
+- **Final Stability Fixes**: Refined the polling engine to be non-blocking.
+- **Cache Refresh**: Forced Marketplace update.
 
-## Version 1.1.1
+### 1.1.4 - Smart Automation
+- **Scroll-on-Found**: Replaces constant autoscroll. It only scrolls when a clickable target is found.
+- **Restricted Detection**: Improved logic to avoid false positives (like accidental folder opening).
+- **Physical Click Engine**: Fully integrated `Input.dispatchMouseEvent` for 100% click reliability.
 
-- Improved AutoScroll with "Sticky Scroll" logic: Internal log panels and terminal view outputs will now correctly auto-scroll. 
-- AutoScroll gracefully pauses if you manually scroll up to read, and resumes when you scroll back down.
+### 1.1.0 - Legacy Autoscroll
+- Initial experiment with constant scrolling.
 
-## Version 1.1.0
+### 1.0.0
+- Base redesign using native commands.
 
-- Added Smart AutoScroll: Automatically scrolls down the Antigravity chat panel to reveal hidden buttons.
-- Excluded main VS Code text editors from autoscroll to allow normal reading.
-- Configurable via `autoAccept.enableAutoScroll`.
-
-## Version 1.0.0
-
-- Complete overhaul using native commands.
-- Improved stability and performance.
-- Removed CDP dependency.
+## License
+MIT
