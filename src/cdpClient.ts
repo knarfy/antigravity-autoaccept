@@ -59,9 +59,9 @@ export class CdpClient {
         });
     }
 
-    async evaluateOnAgentTargets(script: string): Promise<boolean[]> {
+    async evaluateOnAgentTargets(script: string): Promise<any[]> {
         const targets = await this.getTargets();
-        const results: boolean[] = [];
+        const results: any[] = [];
 
         for (const target of targets) {
             if (!target.webSocketDebuggerUrl) {
@@ -77,11 +77,11 @@ export class CdpClient {
         return results;
     }
 
-    private evaluateOnTarget(wsUrl: string, script: string): Promise<boolean> {
+    private evaluateOnTarget(wsUrl: string, script: string): Promise<any> {
         return new Promise((resolve) => {
             const ws = new WebSocket(wsUrl);
             let resolved = false;
-            const done = (val: boolean) => {
+            const done = (val: any) => {
                 if (!resolved) {
                     resolved = true;
                     try { ws.close(); } catch { }
@@ -109,7 +109,7 @@ export class CdpClient {
                     const msg = JSON.parse(data.toString());
                     if (msg.id === 1) {
                         const val = msg.result?.result?.value;
-                        done(val === true);
+                        done(val);
                     }
                 } catch {
                     done(false);

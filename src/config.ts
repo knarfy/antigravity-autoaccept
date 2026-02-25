@@ -14,27 +14,22 @@ export const DEFAULT_BUTTON_TEXTS = [
     'accept',
     'always allow',
     'allow',
-    'continue',
-    'proceed',
     'save',
     'apply',
     'yes',
     'ok',
-    'confirm',
-    'approve',
+    'always run',
+    'run command',
     // Spanish translations
     'aceptar',
     'permitir siempre',
     'permitir',
-    'continuar',
-    'proceder',
     'guardar',
     'aplicar',
     'si',
     'sí',
-    'confirmar',
-    'aprobar',
-    // File modification specific
+    'ejecutar',
+    'siempre ejecutar',
     'accept all',
     'aceptar todo'
 ];
@@ -46,7 +41,12 @@ export function getConfig(): AutoAcceptConfig {
     return {
         pollInterval: cfg.get<number>('pollInterval', 500),
         customButtonTexts: cfg.get<string[]>('customButtonTexts', []),
-        excludedButtonTexts: cfg.get<string[]>('excludedButtonTexts', ["confirmar", "confirm", "aprobar", "approve", "proceed", "proceder"]),
+        excludedButtonTexts: Array.from(new Set([
+            ...(cfg.get<string[]>('excludedButtonTexts') || []),
+            "confirmar", "confirm", "aprobar", "approve", "proceed", "proceder",
+            "send all", "send", "enviar todo", "enviar",
+            "continue", "continuar", "deshacer", "undo", "revert"
+        ])),
         enableOnStartup: cfg.get<boolean>('enableOnStartup', true),
         cdpPort: cfg.get<number>('cdpPort', 9222),
         enableAutoScroll: cfg.get<boolean>('enableAutoScroll', true),

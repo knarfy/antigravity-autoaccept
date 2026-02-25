@@ -129,9 +129,10 @@ async function runDetection() {
     // Ejecución CDP Silenciosa (Buscar activamente botones "Run", "Accept", etc)
     try {
         const results = await cdpClient.evaluateOnAgentTargets(script);
-        const clicked = results.some((r) => !!r);
-        if (clicked) {
-            outputChannel.appendLine('[AutoAccept] ✅ Botón Auto-Aceptado (vía CDP).');
+        for (const res of results) {
+            if (res && res.clicked) {
+                outputChannel.appendLine(`[AutoAccept] ✅ Botón Auto-Aceptado: "${res.text}" (vía CDP).`);
+            }
         }
     } catch (e) {
         // Ignorar errores de red temporales cuando no hay inspector

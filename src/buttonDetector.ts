@@ -10,114 +10,84 @@ function buildDetectorScript(allButtonTexts: string[], excludedTexts: string[], 
     var BUTTON_TEXTS = ${textsJson};
     var EXCLUDE_TEXTS = ${excludedJson};
 
-    var hasAgentPanel = !!(
-        document.querySelector('.react-app-container') ||
-        document.querySelector('[data-agent-panel]') ||
-        document.querySelector('[class*="agent"]') ||
-        document.querySelector('[class*="chat"]')
-    );
-    if (!hasAgentPanel) { return false; }
+    // ELIMINADO: Guardia de panel restrictivo. Escaneamos todos los webviews.
 
     if (${enableAutoScroll}) {
         try {
-            // Amplio selector para pillar contenedores principales y bloques internos (logs, terminales, visores markdown)
             var scrollables = document.querySelectorAll('.react-app-container, [data-agent-panel], .chat-list-container, .monaco-scrollable-element, [class*="content"], [class*="log"], [class*="output"]');
-            
             scrollables.forEach(function(el) {
-                // Solo si el elemento es realmente scrollable y tiene cierta altura mínima
                 if (el.scrollHeight > el.clientHeight && el.clientHeight > 40) {
-                    
-                    // Inicializar el listener de scroll para "Sticky Scroll" (si el usuario sube, pausamos autoscroll)
                     if (!el.dataset.autoScrollListener) {
                         el.dataset.autoScrollListener = "true";
                         el.addEventListener('scroll', function() {
-                            // Estamos "abajo" si la distancia al fondo es menor a 50 píxeles
                             var isAtBottom = (el.scrollHeight - el.scrollTop - el.clientHeight) < 50;
                             el.dataset.userScrolledUp = isAtBottom ? "false" : "true";
                         }, { passive: true });
                     }
-
-                    // Si el usuario no ha subido a mano, forzamos scroll hasta el fondo
                     if (el.dataset.userScrolledUp !== "true") {
-                        el.scrollTo({
-                            top: el.scrollHeight,
-                            behavior: 'auto'
-                        });
+                        el.scrollTo({ top: el.scrollHeight, behavior: 'auto' });
                     }
                 }
             });
-            
-            // Lógica similar para el scroll principal de la ventana (solo si no es el VS Code workbench principal)
-            if (!document.querySelector('.monaco-workbench')) {
-                if (!document.documentElement.dataset.autoScrollListener) {
-                    document.documentElement.dataset.autoScrollListener = "true";
-                    window.addEventListener('scroll', function() {
-                        var doc = document.documentElement;
-                        // Usar 50px de tolerancia
-                        var isAtBottom = (doc.scrollHeight - window.scrollY - window.innerHeight) < 50;
-                        doc.dataset.userScrolledUp = isAtBottom ? "false" : "true";
-                    }, { passive: true });
-                }
-
-                if (document.documentElement.dataset.userScrolledUp !== "true") {
-                    window.scrollTo({
-                        top: document.body.scrollHeight,
-                        behavior: 'auto'
-                    });
-                }
-            }
         } catch(e) {}
     }
 
-    var clicked = false;
-    var walker = document.createTreeWalker(
-        document.body,
-        NodeFilter.SHOW_ELEMENT,
-        null
-    );
+    // Detección V6: Recursión en Shadow DOM
+    function findAndClick(root: Node | ShadowRoot): any {
+        var children = root instanceof HTMLElement || root instanceof ShadowRoot ? root.children : [];
+        for (var i = 0; i < children.length; i++) {
+            var node = children[i] as HTMLElement;
+            
+            // 1. Explorar Shadow DOM si existe
+            if (node.shadowRoot) {
+                var res = findAndClick(node.shadowRoot);
+                if (res) return res;
+            }
 
-    while (walker.nextNode()) {
-        var node = walker.currentNode;
-        if (!(node instanceof HTMLElement)) { continue; }
-        var tag = node.tagName.toLowerCase();
-        var role = (node.getAttribute('role') || '').toLowerCase();
-        var className = (node.getAttribute('class') || '').toLowerCase();
-        var isButton = tag === 'button' || tag === 'a' || tag === 'vscode-button' || role.includes('button') || className.includes('button') || className.includes('btn');
+            // 2. Comprobar si es un elemento interactivo
+            var style = window.getComputedStyle(node);
+            var tag = node.tagName.toLowerCase();
+            var role = (node.getAttribute('role') || '').toLowerCase();
+            var className = (node.getAttribute('class') || '').toLowerCase();
+            
+            var isClickable = tag === 'button' || tag === 'a' || tag === 'vscode-button' || 
+                             role.includes('button') || className.includes('button') || 
+                             className.includes('btn') || style.cursor === 'pointer';
 
-        if (!isButton) {
-            continue;
+            if (isClickable) {
+                var text = (node.textContent || '').trim().toLowerCase();
+                if (text) {
+                    var isExcluded = EXCLUDE_TEXTS.some(function(et) { return text.includes(et); });
+                    if (!isExcluded) {
+                        // Limpieza V5 mejorada: detectamos palabras completas
+                        var cleanText = text.replace(/[^a-z0-9]/g, ' ');
+                        var words = cleanText.split(/\s+/);
+                        
+                        var isMatch = BUTTON_TEXTS.some(function(bt) {
+                            if (bt.indexOf(' ') !== -1) return cleanText.indexOf(bt) !== -1;
+                            return words.indexOf(bt) !== -1;
+                        });
+
+                        if (isMatch) {
+                            var isVisible = !!(node.offsetWidth || node.offsetHeight || node.getClientRects().length);
+                            if (isVisible && style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0') {
+                                node.click();
+                                return { clicked: true, text: text };
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 3. Recursión normal
+            var deepRes = findAndClick(node);
+            if (deepRes) return deepRes;
         }
-        var text = (node.textContent || '').trim().toLowerCase();
-        if (!text) { continue; }
-
-        var isExcluded = EXCLUDE_TEXTS.some(function(et) {
-            return text === et || text.startsWith(et + ' ');
-        });
-        if (isExcluded) {
-            continue;
-        }
-
-        var isMatch = BUTTON_TEXTS.some(function(bt) {
-            return text.startsWith(bt) || text === bt;
-        });
-        if (!isMatch) { continue; }
-
-        var isVisible = !!(
-            node.offsetWidth ||
-            node.offsetHeight ||
-            node.getClientRects().length
-        );
-        if (!isVisible) { continue; }
-
-        var style = window.getComputedStyle(node);
-        if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') {
-            continue;
-        }
-
-        node.click();
-        clicked = true;
+        return null;
     }
-    return clicked;
+
+    var result = findAndClick(document.body);
+    return result || { clicked: false };
 })();
 `;
 }
