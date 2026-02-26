@@ -39,6 +39,11 @@ If you experience external PowerShell/Node windows opening or loss of focus duri
 
 ## Changelog
 
+### 1.1.7 - Terminal Stability Update
+- **Sandboxing Fix**: Automatically disables the "Terminal Sandboxing" feature that caused external window popups and command hangs on Windows.
+- **Anti-Hang Watchdog**: Implemented a reactive mechanism that detects and terminates stuck PowerShell sessions when a "termination request" hang is detected in the UI.
+- **Integrated Terminal Restoration**: Added automatic configuration for `ConPTY` and sandbox settings to ensure commands stay embedded within the chat panel.
+
 ### 1.1.6 - Stable Release
 - **Focus Guard**: Implemented target filtering to prevent accidental clicks in external windows.
 - **Terminal Fix**: Resolved issue with external PowerShell/Node window popups by managing terminal auto-approval settings.
