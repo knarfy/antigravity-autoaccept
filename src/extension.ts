@@ -3,6 +3,7 @@ import { CdpClient } from './cdpClient';
 import { buildDetectorScriptWithCustomTexts } from './buttonDetector';
 import { getConfig } from './config';
 import { ShortcutPatcher } from './shortcutPatcher';
+import * as child_process from 'child_process';
 
 let isEnabled = false;
 let pollTimer: ReturnType<typeof setInterval> | undefined;
@@ -15,7 +16,7 @@ const COOLDOWN_MS = 800;
 
 export async function activate(context: vscode.ExtensionContext) {
     outputChannel = vscode.window.createOutputChannel('Antigravity AutoAccept');
-    outputChannel.appendLine('[AutoAccept] Activando extensión v1.1.2-fix16...');
+    outputChannel.appendLine('[AutoAccept] Activando extensión v1.1.7...');
 
     // Mostrar status bar INMEDIATAMENTE
     statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
@@ -64,7 +65,8 @@ async function configureSettings() {
     const settingsToUpdate = [
         { name: 'chat.tools.global.autoApprove', value: false },
         { name: 'chat.tools.terminal.autoApprove', value: false },
-        { name: 'antigravity.terminal.autoApprove', value: false }
+        { name: 'antigravity.terminal.autoApprove', value: false },
+        { name: 'chat.tools.terminal.sandbox.enabled', value: false }
     ];
 
     for (const item of settingsToUpdate) {
@@ -131,7 +133,22 @@ async function runDetection() {
             outputChannel.appendLine(`[AutoAccept] ✅ Botón Auto-Aceptado: "${r.text}" (vía CDP).`);
             lastClickTime = Date.now();
         }
+        if (r && r.isStuck) {
+            outputChannel.appendLine(`[AutoAccept] ⚠️ Detección de bloqueo terminal detectada. Intentando forzar cierre...`);
+            forceKillPowerShell();
+        }
     }
+}
+
+function forceKillPowerShell() {
+    const cmd = 'taskkill /F /IM powershell.exe /FI "WINDOWTITLE eq C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"';
+    child_process.exec(cmd, (err, stdout, stderr) => {
+        if (!err) {
+            outputChannel.appendLine(`[AutoAccept] 💀 Kill command enviado correctamente.`);
+        } else {
+            outputChannel.appendLine(`[AutoAccept] ❌ Error al enviar kill command: ${stderr}`);
+        }
+    });
 }
 
 function stopPolling() {

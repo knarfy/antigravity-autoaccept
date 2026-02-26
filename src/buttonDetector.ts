@@ -81,11 +81,12 @@ function buildDetectorScript(allButtonTexts: string[], excludedTexts: string[]):
         return null;
     }
 
+    var textContent = document.body.textContent || "";
+    var isStuck = textContent.includes("termination request to command") || 
+                  textContent.includes("solicitud de terminaci\u00f3n");
+
     var found = searchButtons(document);
     if (found) {
-        // ASEGURAR VISIBILIDAD: Solo hacemos scroll si encontramos el botón
-        // Esto evita que "salte" la pantalla constantemente, pero asegura que el clic físico
-        // caiga dentro del viewport y en la posición correcta.
         if (found.scrollIntoView) {
             found.scrollIntoView({ behavior: 'auto', block: 'center', inline: 'center' });
         }
@@ -93,9 +94,9 @@ function buildDetectorScript(allButtonTexts: string[], excludedTexts: string[]):
         var rect = found.getBoundingClientRect();
         var cx = Math.round(rect.x + rect.width / 2);
         var cy = Math.round(rect.y + rect.height / 2);
-        return { clicked: true, text: (found.textContent || '').trim().toLowerCase(), x: cx, y: cy };
+        return { clicked: true, text: (found.textContent || '').trim().toLowerCase(), x: cx, y: cy, isStuck: isStuck };
     }
-    return { clicked: false };
+    return { clicked: false, isStuck: isStuck };
 })();
 `;
 }
