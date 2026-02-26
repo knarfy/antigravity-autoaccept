@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { CdpClient } from './cdpClient';
 import { buildDetectorScriptWithCustomTexts } from './buttonDetector';
 import { getConfig } from './config';
+import { ShortcutPatcher } from './shortcutPatcher';
 
 let isEnabled = false;
 let pollTimer: ReturnType<typeof setInterval> | undefined;
@@ -60,30 +61,41 @@ export async function activate(context: vscode.ExtensionContext) {
 
 async function configureSettings() {
     const config = vscode.workspace.getConfiguration();
-
-    const trueSettings = [
-        'chat.tools.global.autoApprove',
-        'chat.tools.terminal.autoApprove',
-        'antigravity.terminal.autoApprove'
+    const settingsToUpdate = [
+        { name: 'chat.tools.global.autoApprove', value: false },
+        { name: 'chat.tools.terminal.autoApprove', value: false },
+        { name: 'antigravity.terminal.autoApprove', value: false }
     ];
 
-    for (const setting of trueSettings) {
+    for (const item of settingsToUpdate) {
         try {
-            const currentValue = config.inspect(setting)?.globalValue;
-            if (currentValue !== true) {
-                await config.update(setting, true, vscode.ConfigurationTarget.Global);
-                outputChannel.appendLine(`[AutoAccept] Configurado ${setting} = true.`);
+            const currentValue = config.inspect(item.name)?.globalValue;
+            if (currentValue !== item.value) {
+                await config.update(item.name, item.value, vscode.ConfigurationTarget.Global);
+                outputChannel.appendLine(`[AutoAccept] Configurado ${item.name} = ${item.value}.`);
             }
         } catch (e) {
-            outputChannel.appendLine(`[AutoAccept] Error configurando ${setting}: ${e}`);
+            outputChannel.appendLine(`[AutoAccept] Error configurando ${item.name}: ${e}`);
         }
     }
 }
 
 function startPolling() {
-    if (pollTimer) { return; } // Ya está corriendo, no duplicar
+    if (pollTimer) { return; }
 
     const cfg = getConfig();
+
+    // Comprobar puerto antes de empezar
+    cdpClient.isPortOpen().then(isOpen => {
+        if (!isOpen) {
+            outputChannel.appendLine(`[AutoAccept] ⚠️ Puerto CDP ${cfg.cdpPort} CERRADO. La detección no funcionará.`);
+            const patcher = new ShortcutPatcher(cfg.cdpPort, (msg) => outputChannel.appendLine(msg));
+            patcher.checkAndPrompt();
+        } else {
+            outputChannel.appendLine(`[AutoAccept] ✅ Conectado al puerto CDP ${cfg.cdpPort}.`);
+        }
+    });
+
     outputChannel.appendLine(`[AutoAccept] CDP polling cada ${cfg.pollInterval}ms.`);
 
     pollTimer = setInterval(async () => {
@@ -95,8 +107,12 @@ function startPolling() {
         isBusy = true;
         try {
             await runDetection();
-        } catch (e) {
-            // Ignorar errores temporales
+        } catch (e: any) {
+            if (e.message && e.message.includes('ECONNREFUSED')) {
+                // Silencioso si el puerto está cerrado tras el primer aviso
+            } else {
+                outputChannel.appendLine(`[AutoAccept] Error en detección: ${e}`);
+            }
         } finally {
             isBusy = false;
         }

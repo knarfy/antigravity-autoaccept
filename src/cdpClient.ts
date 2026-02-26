@@ -64,7 +64,9 @@ export class CdpClient {
         const results: any[] = [];
 
         for (const target of targets) {
-            if (!target.webSocketDebuggerUrl) {
+            // Ampliamos el filtro: Antigravity usa 'page' e 'iframe' para sus paneles internos
+            const isRelevant = target.type === 'webview' || target.type === 'page' || target.type === 'iframe';
+            if (!target.webSocketDebuggerUrl || !isRelevant) {
                 continue;
             }
             try {
