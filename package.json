@@ -1,8 +1,8 @@
 {
     "name": "antigravity-autoaccept",
     "displayName": "Antigravity AutoAccept",
-    "description": "Auto-acepta pasos del agente Antigravity: ediciones, comandos de terminal y confirmaciones manuales.",
-    "version": "1.1.5",
+    "description": "Auto-accepts Antigravity Agent steps: edits, terminal commands, and manual confirmations using CDP physical clicks.",
+    "version": "1.1.6",
     "publisher": "knarf",
     "repository": {
         "type": "git",
@@ -37,7 +37,7 @@
                 "autoAccept.pollInterval": {
                     "type": "number",
                     "default": 500,
-                    "description": "Intervalo de polling en milisegundos para detectar botones en el panel del agente."
+                    "description": "Polling interval in milliseconds to detect buttons in the agent panel."
                 },
                 "autoAccept.customButtonTexts": {
                     "type": "array",
@@ -45,7 +45,7 @@
                     "items": {
                         "type": "string"
                     },
-                    "description": "Textos adicionales de botones a auto-aceptar (sensible a mayúsculas)."
+                    "description": "Additional button texts to auto-accept (case insensitive)."
                 },
                 "autoAccept.excludedButtonTexts": {
                     "type": "array",
@@ -60,17 +60,17 @@
                     "items": {
                         "type": "string"
                     },
-                    "description": "Textos de botones que NUNCA deben ser auto-aceptados, incluso si coinciden con los predeterminados u otros añadidos."
+                    "description": "Button texts that should NEVER be auto-accepted, even if they match defaults or custom entries."
                 },
                 "autoAccept.enableOnStartup": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Activar AutoAccept automáticamente al iniciar Antigravity."
+                    "description": "Automatically enable AutoAccept when Antigravity starts."
                 },
                 "autoAccept.cdpPort": {
                     "type": "number",
                     "default": 9222,
-                    "description": "Puerto CDP de Chrome DevTools Protocol."
+                    "description": "Chrome DevTools Protocol (CDP) port."
                 }
             }
         }
