@@ -10,8 +10,12 @@ export interface AutoAcceptConfig {
 
 export const DEFAULT_BUTTON_TEXTS = [
     'run',
+    'run command',
+    'execute',
+    'execute command',
     'accept',
     'accept all',
+    'accept all changes',
     'always allow',
     'allow',
     'continue',
@@ -20,10 +24,14 @@ export const DEFAULT_BUTTON_TEXTS = [
     'apply',
     'yes',
     'ok',
+    'approve',
+    'confirm',
     // Spanish translations
     'ejecutar',
+    'ejecutar comando',
     'aceptar',
     'aceptar todo',
+    'aceptar todos los cambios',
     'permitir siempre',
     'permitir',
     'continuar',
@@ -31,7 +39,9 @@ export const DEFAULT_BUTTON_TEXTS = [
     'guardar',
     'aplicar',
     'si',
-    'sí'
+    'sí',
+    'aprobar',
+    'confirmar'
 ];
 
 export const BLOCKED_COMMANDS: string[] = [];
@@ -41,7 +51,7 @@ export function getConfig(): AutoAcceptConfig {
     return {
         pollInterval: cfg.get<number>('pollInterval', 500),
         customButtonTexts: cfg.get<string[]>('customButtonTexts', []),
-        excludedButtonTexts: cfg.get<string[]>('excludedButtonTexts', ["confirmar", "confirm", "aprobar", "approve", "proceed", "proceder", "run and debug"]),
+        excludedButtonTexts: cfg.get<string[]>('excludedButtonTexts', ["confirmar", "confirm", "run and debug"]),
         enableOnStartup: cfg.get<boolean>('enableOnStartup', true),
         cdpPort: cfg.get<number>('cdpPort', 9222)
     };

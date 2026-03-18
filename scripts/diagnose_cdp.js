@@ -16,7 +16,7 @@ function evalOnTarget(wsUrl, script) {
         const ws = new WebSocket(wsUrl);
         let done = false;
         const finish = (v) => { if (!done) { done = true; try { ws.close(); } catch { } resolve(v); } };
-        setTimeout(() => finish({ error: 'timeout' }), 5000);
+        setTimeout(() => finish({ error: 'timeout' }), 10000);
         ws.on('open', () => ws.send(JSON.stringify({ id: 1, method: 'Runtime.evaluate', params: { expression: script, returnByValue: true } })));
         ws.on('message', (d) => {
             const msg = JSON.parse(d.toString());
@@ -38,7 +38,9 @@ const DIAG_SCRIPT = `
                 if (el.shadowRoot) scan(el.shadowRoot, depth + 1);
                 var text = (el.textContent || '').trim().toLowerCase();
                 if (text.length > 0 && text.length < 50) {
-                    if (text === 'accept all' || text === 'run' || text === 'always run') {
+                    // Solo aceptar botones de acción REAL, ignorando dropdowns como 'always run'
+                    if ((text === 'accept all' || text === 'run' || text === 'review changes' || text === 'aceptar todo' || text === 'ejecutar') && 
+                        text !== 'always run' && text !== 'ejecutar siempre') {
                         var rect = el.getBoundingClientRect();
                         found.push({
                             tag: el.tagName, text: text,

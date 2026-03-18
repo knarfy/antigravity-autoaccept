@@ -15,9 +15,9 @@ function buildDetectorScript(allButtonTexts: string[], excludedTexts: string[]):
         var role = (node.getAttribute && node.getAttribute('role')) || '';
         var cls = (node.className || '').toString().toLowerCase();
 
-        // SOLO elementos interactivos: button, a, role=button, o spans con cursor-pointer
-        var isInteractive = (tag === 'BUTTON' || tag === 'A' || role === 'button' ||
-                            (tag === 'SPAN' && cls.indexOf('cursor-pointer') !== -1));
+        // SOLO elementos interactivos: button, a, role=button, vscode-button, o spans/divs con cursor-pointer
+        var isInteractive = (tag === 'BUTTON' || tag === 'A' || tag === 'VSCODE-BUTTON' || role === 'button' ||
+                            ((tag === 'SPAN' || tag === 'DIV') && cls.indexOf('cursor-pointer') !== -1));
         if (!isInteractive) { return null; }
 
         var text = (node.textContent || '').trim().toLowerCase();
@@ -32,7 +32,7 @@ function buildDetectorScript(allButtonTexts: string[], excludedTexts: string[]):
 
         // Match con keyword?
         var isMatch = BUTTON_TEXTS.some(function(bt) {
-            return text === bt || text.startsWith(bt + ' ') || text.startsWith(bt + '\\n') ||
+            return text === bt || text.startsWith(bt + ' ') || text.startsWith(bt + '\n') ||
                    (text.startsWith(bt) && text.length < bt.length + 15);
         });
         if (!isMatch) { return null; }
@@ -45,7 +45,7 @@ function buildDetectorScript(allButtonTexts: string[], excludedTexts: string[]):
 
         // Preferir hijo interactivo con mismo texto
         if (node.querySelectorAll) {
-            var children = node.querySelectorAll('button, a, span, [role="button"]');
+            var children = node.querySelectorAll('button, a, span, div, [role="button"], vscode-button');
             for (var c = 0; c < children.length; c++) {
                 if ((children[c].textContent || '').trim().toLowerCase() === text) {
                     return null;
@@ -61,7 +61,7 @@ function buildDetectorScript(allButtonTexts: string[], excludedTexts: string[]):
     }
 
     function searchButtons(root) {
-        var all = root.querySelectorAll('button, a, [role="button"], span.cursor-pointer, span[class*="cursor-pointer"]');
+        var all = root.querySelectorAll('button, a, [role="button"], vscode-button, .cursor-pointer, [class*="cursor-pointer"]');
         for (var i = 0; i < all.length; i++) {
             var el = all[i];
             if (el.shadowRoot) {
