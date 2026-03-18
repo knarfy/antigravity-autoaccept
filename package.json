@@ -2,7 +2,7 @@
     "name": "antigravity-autoaccept",
     "displayName": "Antigravity AutoAccept",
     "description": "Auto-accepts Antigravity Agent steps: edits, terminal commands, and manual confirmations using CDP physical clicks.",
-    "version": "1.1.7",
+    "version": "1.1.8",
     "publisher": "knarf",
     "repository": {
         "type": "git",
@@ -52,10 +52,7 @@
                     "default": [
                         "confirmar",
                         "confirm",
-                        "aprobar",
-                        "approve",
-                        "proceed",
-                        "proceder"
+                        "run and debug"
                     ],
                     "items": {
                         "type": "string"
