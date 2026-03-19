@@ -39,6 +39,11 @@ If you experience external PowerShell/Node windows opening or loss of focus duri
 
 ## Changelog
 
+### 1.2.0 - Major Stability Release
+- **Full CDP Integration**: Finalized and verified physical click engine for Antigravity.
+- **Improved Detection**: Support for "Review Changes" and Spanish action buttons.
+- **Fixed Terminal Hangs**: No more unexecuted final commands.
+
 ### 1.1.9 - Market Sync Update
 - **Force Metadata Sync**: Re-publishing to resolve Marketplace display issues and ensure the latest 1.1.8 fixes are available.
 
