@@ -39,6 +39,9 @@ If you experience external PowerShell/Node windows opening or loss of focus duri
 
 ## Changelog
 
+### 1.1.9 - Market Sync Update
+- **Force Metadata Sync**: Re-publishing to resolve Marketplace display issues and ensure the latest 1.1.8 fixes are available.
+
 ### 1.1.8 - Final Release & Stability Fixes
 - **Action Detection Upgrade**: Added "review changes" and Spanish keywords ("aceptar todo") for broader compatibility.
 - **Diagnostic Safety**: Improved diagnostic scripts with exclusions for "always run" and dropdown menus.
