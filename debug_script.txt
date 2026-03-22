@@ -1,12 +1,7 @@
-import { DEFAULT_BUTTON_TEXTS } from './config';
 
-function buildDetectorScript(allButtonTexts: string[], excludedTexts: string[]): string {
-    const textsJson = JSON.stringify(allButtonTexts.map((t) => t.toLowerCase()));
-    const excludedJson = JSON.stringify(excludedTexts.map((t) => t.toLowerCase()));
-    return `
 (function() {
-    var BUTTON_TEXTS = ${textsJson};
-    var EXCLUDE_TEXTS = ${excludedJson};
+    var BUTTON_TEXTS = ["run","run command","execute","execute command","accept","accept all","accept all changes","always allow","allow","continue","proceed","save","apply","yes","ok","approve","confirm","ejecutar","ejecutar comando","aceptar","aceptar todo","aceptar todos los cambios","permitir siempre","permitir","continuar","proceder","guardar","aplicar","si","sí","aprobar","confirmar","apply edits","aplicar ediciones","aplicar cambios","overwrite","sobrescribir","overwrite file","overwrite and save","yes, overwrite","sí, sobrescribir"];
+    var EXCLUDE_TEXTS = [];
 
     function checkButton(node) {
         if (!node || !node.tagName) { return null; }
@@ -15,9 +10,9 @@ function buildDetectorScript(allButtonTexts: string[], excludedTexts: string[]):
         var role = (node.getAttribute && node.getAttribute('role')) || '';
         var cls = (node.className || '').toString().toLowerCase();
 
-        // SOLO elementos interactivos: button, a, role=button, vscode-button, o spans/divs con cursor-pointer o monaco-button
+        // SOLO elementos interactivos: button, a, role=button, vscode-button, o spans/divs con cursor-pointer
         var isInteractive = (tag === 'BUTTON' || tag === 'A' || tag === 'VSCODE-BUTTON' || role === 'button' ||
-                            ((tag === 'SPAN' || tag === 'DIV') && (cls.indexOf('cursor-pointer') !== -1 || cls.indexOf('monaco-button') !== -1)));
+                            ((tag === 'SPAN' || tag === 'DIV') && cls.indexOf('cursor-pointer') !== -1));
         if (!isInteractive) { return null; }
 
         var text = (node.textContent || '').trim().toLowerCase();
@@ -32,39 +27,9 @@ function buildDetectorScript(allButtonTexts: string[], excludedTexts: string[]):
 
         // Match con keyword?
         var isMatch = BUTTON_TEXTS.some(function(bt) {
-            var lowerBT = (bt || "").toLowerCase().trim();
-            if (lowerBT.length < 2) return false;
-
-            // Match exacto es siempre válido
-            if (text === lowerBT) return true;
-
-            // Si el texto empieza con keyword, verificar si es palabra completa o shortcut
-            if (text.startsWith(lowerBT)) {
-                // Word boundaries for short words (length <= 3 like "run", "ok", "sí")
-                if (lowerBT.length <= 3) {
-                    var suffix = text.substring(lowerBT.length);
-                    // Match "run ", "run\\n", "run(", "run[" o "run" exacto
-                    if (suffix === "" || suffix.startsWith(" ") || suffix.startsWith("\\n") || suffix.startsWith("(") || suffix.startsWith("[")) {
-                        return true;
-                    }
-                    // Si contiene +, alt, ctrl o shift, es un match con shortcut (ej: "RunAlt+")
-                    if (text.indexOf('+') !== -1 || text.indexOf('ctrl') !== -1 || 
-                        text.indexOf('alt') !== -1 || text.indexOf('shift') !== -1) {
-                        return true;
-                    }
-                    return false;
-                }
-
-                // Para palabras largas (ej: "Accept all"), permitimos variaciones si es razonable
-                // Si contiene +, alt, ctrl o shift, suele ser un shortcut (VS Code UI)
-                if (text.indexOf('+') !== -1 || text.indexOf('ctrl') !== -1 || 
-                    text.indexOf('alt') !== -1 || text.indexOf('shift') !== -1) {
-                    return true;
-                }
-                // Si es solo un poco más largo (espacio, etc), también lo aceptamos
-                if (text.length < lowerBT.length + 15) return true;
-            }
-            return false;
+            return text === bt || text.startsWith(bt + ' ') || text.startsWith(bt + '
+') ||
+                   (text.startsWith(bt) && text.length < bt.length + 15);
         });
         if (!isMatch) { return null; }
 
@@ -74,9 +39,9 @@ function buildDetectorScript(allButtonTexts: string[], excludedTexts: string[]):
         });
         if (isExcluded) { return null; }
 
-        // Preferir hijo interactivo real con mismo texto para Mayor exactitud
+        // Preferir hijo interactivo con mismo texto
         if (node.querySelectorAll) {
-            var children = node.querySelectorAll('button, a, vscode-button, [role="button"]');
+            var children = node.querySelectorAll('button, a, span, div, [role="button"], vscode-button');
             for (var c = 0; c < children.length; c++) {
                 if ((children[c].textContent || '').trim().toLowerCase() === text) {
                     return null;
@@ -92,7 +57,7 @@ function buildDetectorScript(allButtonTexts: string[], excludedTexts: string[]):
     }
 
     function searchButtons(root) {
-        var all = root.querySelectorAll('button, a, [role="button"], vscode-button, .cursor-pointer, .monaco-button, [class*="cursor-pointer"]');
+        var all = root.querySelectorAll('button, a, [role="button"], vscode-button, .cursor-pointer, [class*="cursor-pointer"]');
         for (var i = 0; i < all.length; i++) {
             var el = all[i];
             if (el.shadowRoot) {
@@ -129,10 +94,3 @@ function buildDetectorScript(allButtonTexts: string[], excludedTexts: string[]):
     }
     return { clicked: false, isStuck: isStuck };
 })();
-`;
-}
-
-export function buildDetectorScriptWithCustomTexts(customTexts: string[], excludedTexts: string[]): string {
-    const allTexts = [...DEFAULT_BUTTON_TEXTS, ...customTexts];
-    return buildDetectorScript(allTexts, excludedTexts);
-}

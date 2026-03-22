@@ -16,7 +16,7 @@ const COOLDOWN_MS = 800;
 
 export async function activate(context: vscode.ExtensionContext) {
     outputChannel = vscode.window.createOutputChannel('Antigravity AutoAccept');
-    outputChannel.appendLine('[AutoAccept] Activando extensión v1.1.7...');
+    outputChannel.appendLine('[AutoAccept] Activando extensión v1.2.1-test1...');
 
     // Mostrar status bar INMEDIATAMENTE
     statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
