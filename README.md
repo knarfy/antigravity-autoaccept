@@ -39,6 +39,19 @@ If you experience external PowerShell/Node windows opening or loss of focus duri
 
 ## Changelog
 
+### 1.2.2 - Stability & Shortcut Detection Fix
+- **Shortcut Detection Fix**: Added support for buttons with shortcuts like "Run Alt+" or "Ejecutar Alt+" without requiring extra spaces.
+- **Improved Interactivity**: Added support for `.monaco-button` elements, increasing compatibility with native VS Code UI components.
+- **Detector Stability**: Fixed an internal syntax error in the generated browser script that could silently disable auto-acceptance in some scenarios.
+
+### 1.2.0 - Major Stability Release
+- **Full CDP Integration**: Finalized and verified physical click engine for Antigravity.
+- **Improved Detection**: Support for "Review Changes" and Spanish action buttons.
+- **Fixed Terminal Hangs**: No more unexecuted final commands.
+
+### 1.1.9 - Market Sync Update
+- **Force Metadata Sync**: Re-publishing to resolve Marketplace display issues and ensure the latest 1.1.8 fixes are available.
+
 ### 1.1.8 - Final Release & Stability Fixes
 - **Action Detection Upgrade**: Added "review changes" and Spanish keywords ("aceptar todo") for broader compatibility.
 - **Diagnostic Safety**: Improved diagnostic scripts with exclusions for "always run" and dropdown menus.

@@ -13,15 +13,19 @@ export const DEFAULT_BUTTON_TEXTS = [
     'run command',
     'execute',
     'execute command',
-    'accept',
-    'accept all',
+    'accept changes',
     'accept all changes',
+    'accept all',
+    'accept',
+    'apply changes',
+    'apply edits',
+    'apply all',
+    'apply',
     'always allow',
     'allow',
     'continue',
     'proceed',
     'save',
-    'apply',
     'yes',
     'ok',
     'approve',
@@ -29,19 +33,30 @@ export const DEFAULT_BUTTON_TEXTS = [
     // Spanish translations
     'ejecutar',
     'ejecutar comando',
-    'aceptar',
-    'aceptar todo',
+    'aceptar cambios',
     'aceptar todos los cambios',
+    'aceptar todo',
+    'aceptar',
+    'aplicar cambios',
+    'aplicar ediciones',
+    'aplicar todo',
+    'aplicar',
     'permitir siempre',
     'permitir',
     'continuar',
     'proceder',
     'guardar',
-    'aplicar',
-    'si',
-    'sí',
+    'sí, confirmar',
+    'sí, aceptar',
     'aprobar',
-    'confirmar'
+    'confirmar',
+    // File/Edits specific
+    'overwrite',
+    'sobrescribir',
+    'overwrite file',
+    'overwrite and save',
+    'yes, overwrite',
+    'sí, sobrescribir'
 ];
 
 export const BLOCKED_COMMANDS: string[] = [];
@@ -51,7 +66,7 @@ export function getConfig(): AutoAcceptConfig {
     return {
         pollInterval: cfg.get<number>('pollInterval', 500),
         customButtonTexts: cfg.get<string[]>('customButtonTexts', []),
-        excludedButtonTexts: cfg.get<string[]>('excludedButtonTexts', ["confirmar", "confirm", "run and debug"]),
+        excludedButtonTexts: cfg.get<string[]>('excludedButtonTexts', ["run and debug"]),
         enableOnStartup: cfg.get<boolean>('enableOnStartup', true),
         cdpPort: cfg.get<number>('cdpPort', 9222)
     };
